@@ -14,51 +14,22 @@ import {
 } from 'tsd';
 
 
-const optionalFields = {
-	_score: 1,
-	_sort: [{}],
-	childOrder: 'childOrder',
-	inherit: ['CONTENT'] as Content['inherit'],
-	language: 'language',
-	modifier: 'user:repo:modifier' as Content['modifier'],
-	modifiedTime: '2021-01-01T00:00:00Z',
-	originProject: 'originProject',
-	publish: {
-		first: 'first',
-		from: 'from',
-		to: 'to',
-	},
-	variantOf: 'variantOf',
-	workflow: {
-		checks: {
-			string: 'APPROVED'
-		} as Content['workflow']['checks'],
-		state: 'READY' as Content['workflow']['state'],
-	}
-};
-
-const commonFields = {
-	...optionalFields,
-	_id: 'id',
-	_name: 'name',
-	_path: '/',
-	attachments: {},
-	creator: 'user:repo:creator' as Content['creator'],
-	createdTime: '2021-01-01T00:00:00Z',
-	owner: 'user:repo:creator' as Content['owner'],
-	displayName: 'displayName',
-	hasChildren: false,
-	valid: true,
-	x: {}
-};
-
 const myPart = ({
 	path = '/'
 }: {
 	path?: string
 } = {}) => ({
-	type: 'part' as PartComponent['type'],
-	descriptor: 'com.enonic.app.myapp:mypart' as PartComponent['descriptor'],
+
+	// TODO: Any of the two first works, but not the third, why?
+	// type: 'part' as PartComponent['type'],
+	type: 'part' as const,
+	// type: 'part',
+
+	// TODO: Again, any of the two first works, but not the third, why?
+	// descriptor: 'com.enonic.app.myapp:mypart' as PartComponent['descriptor'],
+	descriptor: 'com.enonic.app.myapp:mypart' as const,
+	// descriptor: 'com.enonic.app.myapp:mypart',
+
 	config: {},
 	path
 });
@@ -72,10 +43,13 @@ const myPage = ({
 }: {
 	components?: PageComponent['regions']['main']['components']
 } = {}) => ({
-	type: 'page' as PageComponent['type'],
-	descriptor: 'com.enonic.app.myapp:mypage' as PageComponent['descriptor'],
+	// type: 'page' as PageComponent['type'],
+	type: 'page' as const,
+	// descriptor: 'com.enonic.app.myapp:mypage' as PageComponent['descriptor'],
+	descriptor: 'com.enonic.app.myapp:mypage' as const,
 	config: {},
-	path: '/' as PageComponent['path'],
+	//path: '/' as PageComponent['path'],
+	path: '/' as const,
 	regions: {
 		main: {
 			name: 'main',
@@ -84,28 +58,71 @@ const myPage = ({
 	} // as PageComponent['regions']
 });
 
+const optionalFields = {
+	_score: 1,
+	_sort: [{}],
+	childOrder: 'childOrder',
+	// inherit: ['CONTENT'] as Content['inherit'],
+	inherit: ['CONTENT' as const],
+	language: 'language',
+	// modifier: 'user:repo:modifier' as Content['modifier'],
+	modifier: 'user:repo:modifier' as const,
+	modifiedTime: '2021-01-01T00:00:00Z',
+	originProject: 'originProject',
+	publish: {
+		first: 'first',
+		from: 'from',
+		to: 'to',
+	},
+	variantOf: 'variantOf',
+	workflow: {
+		checks: {
+			string: 'APPROVED' as const
+		}, //as Content['workflow']['checks'],
+		// state: 'READY' as Content['workflow']['state'],
+		state: 'READY' as const,
+	}
+};
+
+const commonFields = {
+	...optionalFields,
+	_id: 'id',
+	_name: 'name',
+	_path: '/',
+	attachments: {},
+	createdTime: '2021-01-01T00:00:00Z',
+	// creator: 'user:repo:creator' as Content['creator'],
+	creator: 'user:repo:creator' as const,
+	data: {},
+	displayName: 'displayName',
+	hasChildren: false,
+	// owner: 'user:repo:creator' as Content['owner'],
+	owner: 'user:repo:creator' as const,
+	valid: true,
+	x: {}
+};
+
 const siteContent = {
 	...commonFields,
-	data: {},
-	fragment: undefined,
+	// fragment: undefined,
 	page: myPage(),
 	type: 'portal:site',
 };
 
 const fragmentContent = {
 	...commonFields,
-	data: undefined, // TODO: I don't like that this is needed.
+	// data: undefined, // NOTE: Not needed after fixed in xp#10176
 	fragment: myPart(),
-	page: undefined, // TODO: I don't like that this is needed.
+	// page: undefined, // NOTE: Not needed after fixed in xp#10176
+	// page: undefined as never, // If page wasn't optional, this would be needed :( ugly
 	type: 'portal:fragment' as const // TODO: Something is going on, why is this needed???
 };
 
 const folderContent = {
 	...commonFields,
-	data: {},
-	fragment: undefined, // TODO: I don't like that this is needed.
+	// fragment: undefined, // NOTE: Not needed after fixed in xp#10176
 	page: {}, // Yes page can be an empty object
-	type: 'base:folder',
+	type: 'base:folder' as const, // TODO: Something is going on, why is this needed???
 };
 
 
@@ -127,7 +144,7 @@ describe('core', () => {
 		test('fragmentContent is assignable', () => {
 			expectAssignable<
 				Content<
-				undefined,
+				{},
 				'portal:fragment',
 				PartComponent
 			>
@@ -135,7 +152,7 @@ describe('core', () => {
 			// expectAssignable<Content>(fragmentContent); // TODO Why doesn't it detect the type?
 		});
 		test('folderContent is assignable', () => {
-			expectAssignable<Content>(folderContent);
+			expectAssignable<Content<{},'base:folder',{}>>(folderContent);
 		});
 	});
 });
